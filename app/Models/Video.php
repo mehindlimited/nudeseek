@@ -20,6 +20,8 @@ class Video extends Model
         'views',
         'likes',
         'user_id',
+        'main_dir',
+        'target_id'
     ];
 
     protected $casts = [

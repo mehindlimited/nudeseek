@@ -25,6 +25,7 @@ class VideoForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $code = Video::generateUniqueCode();
         return $schema
             ->components([
                 TextInput::make('title')
@@ -40,7 +41,9 @@ class VideoForm
                     ->maxLength(255)
                     ->unique(table: 'videos', column: 'slug', ignoreRecord: true),
                 Hidden::make('code')
-                    ->default(fn() => Video::generateUniqueCode()),
+                    ->default($code),
+                Hidden::make('main_dir')
+                    ->default(substr($code, 0, 1)),
                 Textarea::make('description')
                     ->columnSpanFull()
                     ->maxLength(65535),

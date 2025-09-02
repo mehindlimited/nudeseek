@@ -20,9 +20,9 @@
     <main class="max-w-[1536px] mx-auto px-[9px] py-6">
         <!-- Video Thumbnails Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-2 gap-y-6">
-            @for ($i = 0; $i < 20; $i++)
-                @include('shared.video-thumbnail', ['i'=> $i])
-                @endfor
+            @foreach ($videos as $video)
+            @include('shared.video-thumbnail', ['video' => $video])
+            @endforeach
         </div>
     </main>
 
