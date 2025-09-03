@@ -16,6 +16,8 @@ import time
 from botocore.exceptions import ClientError, NoCredentialsError
 from urllib.parse import urlparse
 import json
+import random
+import re
 
 # Load environment variables from .env file
 try:
@@ -213,6 +215,41 @@ class ContentPublisherRobot:
             logger.error(f"❌ Error fetching random user: {e}")
             return None
 
+    def generate_video_code(self) -> str:
+        """Generate a unique video code EXACTLY matching Laravel's format"""
+        # EXACT same characters as Laravel: 'abcdefghijklmnopqrstuvwxyz0123456789'
+        characters = 'abcdefghijklmnopqrstuvwxyz0123456789'
+        
+        # Generate EXACTLY 16-character code like Laravel
+        code = ''
+        for i in range(16):
+            code += characters[random.randint(0, len(characters) - 1)]
+        
+        logger.info(f"🔍 Generated code: '{code}' (length: {len(code)})")
+        logger.info(f"🔍 Code validation - IsLower: {code.islower()}, IsAlnum: {code.isalnum()}")
+        
+        return code
+
+    def clean_title(self, title: str) -> str:
+        """Clean video title by removing unwanted parts"""
+        if not title:
+            return ""
+        
+        # Remove "- ThisVid.com" and similar patterns
+        patterns_to_remove = [
+            r'\s*-\s*ThisVid\.com\s*$',
+            r'\s*-\s*thisvid\.com\s*$', 
+            r'\s*\|\s*ThisVid\.com\s*$',
+            r'\s*\|\s*thisvid\.com\s*$'
+        ]
+        
+        cleaned_title = title.strip()
+        
+        for pattern in patterns_to_remove:
+            cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
+        
+        return cleaned_title.strip()
+
     def download_file_from_s3(self, s3_key: str, local_path: str) -> bool:
         """Download file from S3 to local path"""
         try:
@@ -257,11 +294,6 @@ class ContentPublisherRobot:
         except Exception as e:
             logger.error(f"❌ Error uploading file: {e}")
             return False
-
-    def generate_video_code(self) -> str:
-        """Generate a unique video code"""
-        import uuid
-        return str(uuid.uuid4())[:12].upper()
 
     def process_video_files(self, video_data: Dict[str, Any], video_code: str) -> Dict[str, str]:
         """Download video files from S3 sources and upload to temp directory with proper naming"""
@@ -318,15 +350,6 @@ class ContentPublisherRobot:
         except Exception as e:
             logger.error(f"❌ Error processing video files: {e}")
             return {}
-
-    def _get_file_extension(self, filename: str, default: str = 'mp4') -> str:
-        """Extract file extension from filename"""
-        try:
-            if '.' in filename:
-                return filename.split('.')[-1].lower()
-            return default
-        except:
-            return default
 
     def _cleanup_local_file(self, file_path: str):
         """Safely remove local file"""
@@ -500,7 +523,7 @@ class ContentPublisherRobot:
             video_id = video_data['video_id']
             logger.info(f"🎯 Processing video: {video_id} - '{video_data.get('title', 'No title')}'")
             
-            # Generate video code
+            # Generate video code - FIXED to match Laravel format exactly
             video_code = self.generate_video_code()
             logger.info(f"🆔 Generated video code: {video_code}")
             
@@ -548,73 +571,6 @@ class ContentPublisherRobot:
             if connection:
                 connection.close()
 
-    def run_continuous(self, delay_seconds: int = 60):
-        """Run the robot continuously"""
-        delay_seconds = int(os.getenv('DEFAULT_DELAY', delay_seconds))
-        logger.info(f"🔄 Starting Content Publisher Robot in continuous mode (delay: {delay_seconds}s)")
-        
-        consecutive_failures = 0
-        max_consecutive_failures = 5
-        
-        while True:
-            try:
-                processed = self.process_single_video()
-                
-                if processed:
-                    logger.info(f"✅ Video processed successfully. Waiting {delay_seconds} seconds...")
-                    consecutive_failures = 0
-                else:
-                    consecutive_failures += 1
-                    logger.info(f"📭 No videos processed. Waiting {delay_seconds} seconds... (consecutive failures: {consecutive_failures})")
-                
-                # If too many consecutive failures, increase delay
-                if consecutive_failures >= max_consecutive_failures:
-                    extended_delay = delay_seconds * 2
-                    logger.warning(f"⚠️ Too many consecutive failures, extending delay to {extended_delay}s")
-                    time.sleep(extended_delay)
-                    consecutive_failures = 0
-                else:
-                    time.sleep(delay_seconds)
-                
-            except KeyboardInterrupt:
-                logger.info("🛑 Robot stopped by user")
-                break
-            except Exception as e:
-                logger.error(f"❌ Unexpected error in main loop: {e}")
-                consecutive_failures += 1
-                time.sleep(delay_seconds)
-
-    def run_batch(self, max_videos: int = 10):
-        """Run the robot for a batch of videos"""
-        max_videos = int(os.getenv('DEFAULT_BATCH_SIZE', max_videos))
-        logger.info(f"📦 Starting Content Publisher Robot in batch mode (max {max_videos} videos)")
-        
-        processed_count = 0
-        failed_count = 0
-        
-        while processed_count < max_videos:
-            try:
-                if self.process_single_video():
-                    processed_count += 1
-                    logger.info(f"📊 Processed {processed_count}/{max_videos} videos")
-                else:
-                    failed_count += 1
-                    logger.info(f"📭 No videos to process (attempt {failed_count})")
-                    
-                    # If no videos found multiple times, break
-                    if failed_count >= 3:
-                        logger.info("✨ No more videos to process")
-                        break
-                    
-                    # Short delay between attempts
-                    time.sleep(5)
-                    
-            except Exception as e:
-                logger.error(f"❌ Error in batch processing: {e}")
-                break
-        
-        logger.info(f"🎉 Batch processing completed. Processed {processed_count} videos")
-
     def get_status(self) -> Dict[str, Any]:
         """Get current status of the robot and pending videos"""
         try:
@@ -629,29 +585,11 @@ class ContentPublisherRobot:
                     AND download_status = 'completed'
                 """)
                 pending = cursor.fetchone()
-                
-                # Count total completed downloads
-                cursor.execute("""
-                    SELECT COUNT(*) as completed_count
-                    FROM videos 
-                    WHERE download_status = 'completed'
-                """)
-                completed = cursor.fetchone()
-                
-                # Count imported videos
-                cursor.execute("""
-                    SELECT COUNT(*) as imported_count
-                    FROM videos 
-                    WHERE imported_status = 'yes'
-                """)
-                imported = cursor.fetchone()
             
             connection.close()
             
             return {
                 'pending_videos': pending['pending_count'],
-                'completed_downloads': completed['completed_count'],
-                'imported_videos': imported['imported_count'],
                 'api_base_url': self.api_base_url,
                 'bucket_name': self.bucket_name,
                 'status': 'healthy'
@@ -671,11 +609,7 @@ def main():
     parser = argparse.ArgumentParser(description='Content Publisher Robot')
     parser.add_argument('--mode', choices=['single', 'batch', 'continuous', 'status'], 
                        default='single', help='Running mode')
-    parser.add_argument('--batch-size', type=int, 
-                       default=int(os.getenv('DEFAULT_BATCH_SIZE', '10')), 
-                       help='Number of videos to process in batch mode')
-    parser.add_argument('--delay', type=int, 
-                       default=int(os.getenv('DEFAULT_DELAY', '60')), 
+    parser.add_argument('--delay', type=int, default=60,
                        help='Delay between processing in continuous mode (seconds)')
     
     args = parser.parse_args()
@@ -691,10 +625,6 @@ def main():
         if args.mode == 'single':
             success = robot.process_single_video()
             sys.exit(0 if success else 1)
-        elif args.mode == 'batch':
-            robot.run_batch(args.batch_size)
-        elif args.mode == 'continuous':
-            robot.run_continuous(args.delay)
         elif args.mode == 'status':
             status = robot.get_status()
             print(json.dumps(status, indent=2))
