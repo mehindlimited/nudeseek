@@ -16,10 +16,6 @@ import time
 from botocore.exceptions import ClientError, NoCredentialsError
 from urllib.parse import urlparse
 import json
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -61,13 +57,8 @@ class ContentPublisherRobot:
         self.s3_temp_dir = 'temp'
         self.local_temp_dir = '/temp'
         
-        # API Configuration
+        # API Configuration - No token required
         self.api_base_url = os.getenv('API_BASE_URL', 'https://your-api-domain.com/api')
-        self.api_token = os.getenv('API_TOKEN', '')
-        
-        if not self.api_token:
-            logger.error("API_TOKEN not found in environment variables!")
-            raise ValueError("API_TOKEN is required")
         
         # Processing configuration
         self.max_retries = int(os.getenv('MAX_RETRIES', '3'))
@@ -79,6 +70,7 @@ class ContentPublisherRobot:
         os.makedirs(self.local_temp_dir, exist_ok=True)
         
         logger.info("Content Publisher Robot initialized successfully")
+        logger.info(f"API Base URL: {self.api_base_url}")
 
     def _init_s3_client(self):
         """Initialize S3 client with custom endpoint"""
@@ -139,7 +131,6 @@ class ContentPublisherRobot:
         """Get category information by legacy value from Filament API"""
         try:
             headers = {
-                'Authorization': f'Bearer {self.api_token}',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
@@ -169,7 +160,6 @@ class ContentPublisherRobot:
         """Get a random user based on target_id and sexual_orientation criteria"""
         try:
             headers = {
-                'Authorization': f'Bearer {self.api_token}',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
@@ -384,7 +374,6 @@ class ContentPublisherRobot:
             api_payload = {k: v for k, v in api_payload.items() if v is not None}
             
             headers = {
-                'Authorization': f'Bearer {self.api_token}',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
@@ -419,7 +408,6 @@ class ContentPublisherRobot:
         """Trigger the afterCreate functionality for video encoding using videoCode"""
         try:
             headers = {
-                'Authorization': f'Bearer {self.api_token}',
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
