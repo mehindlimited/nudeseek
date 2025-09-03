@@ -55,7 +55,7 @@ class ContentPublisherRobot:
         self.bucket_name = os.getenv('AWS_BUCKET', 'nudeseek-com')
         self.s3_source_dir = 'sources'
         self.s3_temp_dir = 'temp'
-        self.local_temp_dir = '/temp'
+        self.local_temp_dir = 'temp'
         
         # API Configuration - No token required
         self.api_base_url = os.getenv('API_BASE_URL', 'https://your-api-domain.com/api')
