@@ -37,6 +37,7 @@ class VideoPublisherController extends Controller
                     'max:255',
                     'unique:videos,code'
                 ],
+                'main_dir' => 'nullable|string|max:1', // Add validation for main_dir
                 'title' => 'required|string|max:255',
                 'slug' => [
                     'nullable',
@@ -87,51 +88,80 @@ class VideoPublisherController extends Controller
             // Set default status
             $validated['status'] = 'draft';
 
-            // Log what we're about to save
-            \Log::info('About to create video with data:', [
-                'code' => $validated['code'], // This should be the Python code
-                'title' => $validated['title'],
-                'target_id' => $validated['target_id'],
-                'category_id' => $validated['category_id'] ?? null,
-                'user_id' => $validated['user_id'],
-                'tags_count' => isset($validated['tags']) ? count($validated['tags']) : 0
+            // Generate main_dir from first character of code
+            $validated['main_dir'] = substr($validated['code'], 0, 1);
+
+            \Log::info('Generated main_dir before creation:', [
+                'code' => $validated['code'],
+                'main_dir' => $validated['main_dir'],
+                'main_dir_length' => strlen($validated['main_dir']),
+                'validated_array_has_main_dir' => isset($validated['main_dir'])
             ]);
 
-            // Create the video record - DO NOT generate new code
-            $video = Video::create([
+            // Debug: Check what we're actually passing to create()
+            $createData = [
                 'title' => $validated['title'],
                 'slug' => $validated['slug'],
-                'code' => $validated['code'], // Use EXACT code from Python
+                'code' => $validated['code'],
+                'main_dir' => $validated['main_dir'], // Explicitly set
                 'description' => $validated['description'] ?? null,
                 'published_at' => $validated['published_at'],
                 'status' => $validated['status'],
-                'access_type' => $validated['access_type'],
+                'access_type' => $validated['access_type'], // Use access_type since you fixed it
                 'user_id' => $validated['user_id'],
                 'target_id' => $validated['target_id'],
                 'category_id' => $validated['category_id'] ?? null,
+            ];
+
+            \Log::info('Data being passed to Video::create():', [
+                'create_data' => $createData,
+                'main_dir_in_create_data' => $createData['main_dir'] ?? 'NOT SET'
             ]);
 
-            // CRITICAL: Verify code wasn't changed by model events
-            \Log::info('Video created - checking code:', [
+            // Create the video record - DO NOT generate new code
+            $video = Video::create($createData);
+
+            // CRITICAL: Verify code and main_dir weren't changed by model events
+            \Log::info('Video created - checking all fields:', [
                 'video_id' => $video->id,
                 'expected_code' => $validated['code'],
                 'actual_code' => $video->code,
-                'code_matches' => $video->code === $validated['code']
+                'expected_main_dir' => $validated['main_dir'],
+                'actual_main_dir' => $video->main_dir,
+                'main_dir_is_null' => is_null($video->main_dir),
+                'main_dir_is_empty_string' => $video->main_dir === '',
+                'code_matches' => $video->code === $validated['code'],
+                'main_dir_matches' => $video->main_dir === $validated['main_dir']
             ]);
 
-            // If code was changed by model events, force it back
-            if ($video->code !== $validated['code']) {
-                \Log::error('CODE WAS OVERRIDDEN BY MODEL! Forcing correction...', [
-                    'expected' => $validated['code'],
-                    'got' => $video->code
+            // Check database directly
+            $dbVideo = \DB::table('videos')->where('id', $video->id)->first();
+            \Log::info('Direct database check:', [
+                'db_code' => $dbVideo->code,
+                'db_main_dir' => $dbVideo->main_dir,
+                'db_main_dir_is_null' => is_null($dbVideo->main_dir),
+                'db_access_type' => $dbVideo->access_type ?? 'FIELD_NOT_EXISTS'
+            ]);
+
+            // If code or main_dir was changed by model events, force it back
+            if ($video->code !== $validated['code'] || $video->main_dir !== $validated['main_dir']) {
+                \Log::error('CODE OR MAIN_DIR WAS OVERRIDDEN BY MODEL! Forcing correction...', [
+                    'expected_code' => $validated['code'],
+                    'got_code' => $video->code,
+                    'expected_main_dir' => $validated['main_dir'],
+                    'got_main_dir' => $video->main_dir
                 ]);
 
                 // Force update without triggering events
-                \DB::table('videos')->where('id', $video->id)->update(['code' => $validated['code']]);
+                \DB::table('videos')->where('id', $video->id)->update([
+                    'code' => $validated['code'],
+                    'main_dir' => $validated['main_dir']
+                ]);
                 $video->refresh();
 
-                \Log::info('Code forcefully corrected:', [
-                    'final_code' => $video->code
+                \Log::info('Code and main_dir forcefully corrected:', [
+                    'final_code' => $video->code,
+                    'final_main_dir' => $video->main_dir
                 ]);
             }
 
@@ -203,10 +233,16 @@ class VideoPublisherController extends Controller
             // Load relationships and verify final state
             $video->load(['user', 'target', 'category', 'tags']);
 
-            \Log::info('FINAL VIDEO STATE:', [
+            \Log::info('FINAL VIDEO STATE WITH DEBUG:', [
                 'video_id' => $video->id,
                 'video_code' => $video->code,
                 'main_dir' => $video->main_dir,
+                'main_dir_debug' => [
+                    'is_null' => is_null($video->main_dir),
+                    'is_empty_string' => $video->main_dir === '',
+                    'length' => $video->main_dir ? strlen($video->main_dir) : 0,
+                    'expected' => substr($video->code, 0, 1)
+                ],
                 'title' => $video->title,
                 'category_id' => $video->category_id,
                 'category_name' => $video->category?->name,
