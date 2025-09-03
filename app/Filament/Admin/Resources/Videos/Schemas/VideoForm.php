@@ -130,32 +130,29 @@ class VideoForm
                     ->placeholder('Select a category'),
                 TagsInput::make('tags')
                     ->label('Tags')
-                    ->suggestions(
-                        fn() => Tag::pluck('name')->toArray()
-                    )
+                    ->suggestions(fn() => Tag::pluck('name')->toArray())
                     ->separator(',')
                     ->splitKeys(['Tab', 'Enter', ','])
-                    ->reactive()
+                    ->formatStateUsing(
+                        fn($state, $record) =>                // <-- hydrate
+                        $record?->tags()->pluck('name')->toArray() ?? []
+                    )
                     ->afterStateUpdated(function ($state, callable $set) {
-                        $set('tags', array_map('trim', $state));
+                        $set('tags', array_map('trim', (array) $state));
                     })
                     ->saveRelationshipsUsing(function ($record, $state) {
-                        $tags = collect($state)->map(function ($tagName) {
-                            $tagName = trim($tagName);
-                            if (empty($tagName)) {
-                                return null;
-                            }
-                            return Tag::firstOrCreate(
-                                ['name' => $tagName],
-                                ['name' => $tagName, 'slug' => (new Tag)->generateUniqueSlug($tagName)]
-                            )->id;
-                        })->filter();
-                        $record->tags()->sync($tags);
+                        $ids = collect($state)
+                            ->map(fn($name) => trim((string) $name))
+                            ->filter()
+                            ->map(function ($name) {
+                                return Tag::firstOrCreate(
+                                    ['name' => $name],
+                                    ['slug' => (new Tag)->generateUniqueSlug($name)]
+                                )->id;
+                            });
+                        $record->tags()->sync($ids);
                     })
-                    ->nestedRecursiveRules([
-                        'min:2',
-                        'max:50',
-                    ]),
+                    ->rules(['min:2', 'max:50']),
             ]);
     }
 }
