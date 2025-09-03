@@ -206,6 +206,7 @@ class VideoPublisherController extends Controller
             \Log::info('FINAL VIDEO STATE:', [
                 'video_id' => $video->id,
                 'video_code' => $video->code,
+                'main_dir' => $video->main_dir,
                 'title' => $video->title,
                 'category_id' => $video->category_id,
                 'category_name' => $video->category?->name,
