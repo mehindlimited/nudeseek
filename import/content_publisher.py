@@ -629,7 +629,11 @@ def main():
     parser = argparse.ArgumentParser(description='Content Publisher Robot')
     parser.add_argument('--mode', choices=['single', 'batch', 'continuous', 'status'], 
                        default='single', help='Running mode')
-    parser.add_argument('--delay', type=int, default=60,
+    parser.add_argument('--batch-size', type=int, 
+                       default=int(os.getenv('DEFAULT_BATCH_SIZE', '10')), 
+                       help='Number of videos to process in batch mode')
+    parser.add_argument('--delay', type=int, 
+                       default=int(os.getenv('DEFAULT_DELAY', '60')),
                        help='Delay between processing in continuous mode (seconds)')
     
     args = parser.parse_args()
@@ -645,6 +649,12 @@ def main():
         if args.mode == 'single':
             success = robot.process_single_video()
             sys.exit(0 if success else 1)
+        elif args.mode == 'batch':
+            processed_count = robot.run_batch(args.batch_size)
+            logger.info(f"🏁 Batch mode completed. Processed {processed_count} videos.")
+            sys.exit(0 if processed_count > 0 else 1)
+        elif args.mode == 'continuous':
+            robot.run_continuous(args.delay)
         elif args.mode == 'status':
             status = robot.get_status()
             print(json.dumps(status, indent=2))
