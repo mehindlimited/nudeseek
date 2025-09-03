@@ -266,55 +266,52 @@ class ContentPublisherRobot:
     def process_video_files(self, video_data: Dict[str, Any], video_code: str) -> Dict[str, str]:
         """Download video files from S3 sources and upload to temp directory with proper naming"""
         file_paths = {}
+        video_id = video_data['video_id']  # Use video_id from database
         
         try:
-            # Process video file
-            if video_data.get('video_file'):
-                video_extension = self._get_file_extension(video_data['video_file'], 'mp4')
-                video_filename = f"{video_code}.{video_extension}"
-                source_video_key = f"{self.s3_source_dir}/{video_data['video_file']}"
-                temp_video_key = f"{self.s3_temp_dir}/{video_filename}"
-                local_video_path = os.path.join(self.local_temp_dir, video_filename)
-                
-                logger.info(f"🎬 Processing video file: {video_data['video_file']} -> {video_filename}")
-                
-                # Download from sources directory
-                if self.download_file_from_s3(source_video_key, local_video_path):
-                    # Upload to temp directory with new name
-                    if self.upload_file_to_s3(local_video_path, temp_video_key):
-                        file_paths['video_file'] = video_filename
-                        logger.info(f"✅ Video file processed successfully: {video_filename}")
-                    else:
-                        logger.error(f"❌ Failed to upload video file to temp: {video_filename}")
-                    
-                    # Clean up local file
-                    self._cleanup_local_file(local_video_path)
-                else:
-                    logger.error(f"❌ Failed to download video file: {source_video_key}")
+            # Process video file - use video_id.mp4 from S3 sources
+            source_video_key = f"{self.s3_source_dir}/{video_id}.mp4"
+            video_filename = f"{video_code}.mp4"
+            temp_video_key = f"{self.s3_temp_dir}/{video_filename}"
+            local_video_path = os.path.join(self.local_temp_dir, video_filename)
             
-            # Process thumbnail file
-            if video_data.get('thumbnail'):
-                thumb_extension = self._get_file_extension(video_data['thumbnail'], 'jpg')
-                thumb_filename = f"{video_code}_thumb.{thumb_extension}"
-                source_thumb_key = f"{self.s3_source_dir}/{video_data['thumbnail']}"
-                temp_thumb_key = f"{self.s3_temp_dir}/{thumb_filename}"
-                local_thumb_path = os.path.join(self.local_temp_dir, thumb_filename)
-                
-                logger.info(f"🖼️ Processing thumbnail: {video_data['thumbnail']} -> {thumb_filename}")
-                
-                # Download from sources directory
-                if self.download_file_from_s3(source_thumb_key, local_thumb_path):
-                    # Upload to temp directory with new name
-                    if self.upload_file_to_s3(local_thumb_path, temp_thumb_key):
-                        file_paths['thumbnail'] = thumb_filename
-                        logger.info(f"✅ Thumbnail processed successfully: {thumb_filename}")
-                    else:
-                        logger.error(f"❌ Failed to upload thumbnail to temp: {thumb_filename}")
-                    
-                    # Clean up local file
-                    self._cleanup_local_file(local_thumb_path)
+            logger.info(f"🎬 Processing video file: {video_id}.mp4 -> {video_filename}")
+            
+            # Download from sources directory
+            if self.download_file_from_s3(source_video_key, local_video_path):
+                # Upload to temp directory with new name
+                if self.upload_file_to_s3(local_video_path, temp_video_key):
+                    file_paths['video_file'] = video_filename
+                    logger.info(f"✅ Video file processed successfully: {video_filename}")
                 else:
-                    logger.warning(f"⚠️ Failed to download thumbnail (continuing anyway): {source_thumb_key}")
+                    logger.error(f"❌ Failed to upload video file to temp: {video_filename}")
+                
+                # Clean up local file
+                self._cleanup_local_file(local_video_path)
+            else:
+                logger.error(f"❌ Failed to download video file: {source_video_key}")
+            
+            # Process thumbnail file - use video_id.jpg from S3 sources
+            source_thumb_key = f"{self.s3_source_dir}/{video_id}.jpg"
+            thumb_filename = f"{video_code}_thumb.jpg"
+            temp_thumb_key = f"{self.s3_temp_dir}/{thumb_filename}"
+            local_thumb_path = os.path.join(self.local_temp_dir, thumb_filename)
+            
+            logger.info(f"🖼️ Processing thumbnail: {video_id}.jpg -> {thumb_filename}")
+            
+            # Download from sources directory
+            if self.download_file_from_s3(source_thumb_key, local_thumb_path):
+                # Upload to temp directory with new name
+                if self.upload_file_to_s3(local_thumb_path, temp_thumb_key):
+                    file_paths['thumbnail'] = thumb_filename
+                    logger.info(f"✅ Thumbnail processed successfully: {thumb_filename}")
+                else:
+                    logger.error(f"❌ Failed to upload thumbnail to temp: {thumb_filename}")
+                
+                # Clean up local file
+                self._cleanup_local_file(local_thumb_path)
+            else:
+                logger.warning(f"⚠️ Failed to download thumbnail (continuing anyway): {source_thumb_key}")
             
             return file_paths
             
