@@ -179,7 +179,7 @@ class UserSeeder extends Seeder
         $usernames = [];
 
         // Create 50 homosexual + 50 heterosexual
-        for ($i = 0; $i < 100; $i++) {
+        for ($i = 0; $i < 300; $i++) {
             do {
                 $username = strtolower(
                     $words1[array_rand($words1)] .
@@ -198,7 +198,7 @@ class UserSeeder extends Seeder
                 'status'              => 'active',
                 'is_real'             => false,
                 'country_id'          => $countryIds[array_rand($countryIds)],
-                'sexual_orientation'  => $i < 50 ? 'omosexual' : 'heterosexual',
+                'sexual_orientation'  => $i < 150 ? 'omosexual' : 'heterosexual',
             ]);
         }
     }

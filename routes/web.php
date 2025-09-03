@@ -7,6 +7,8 @@ use App\Http\Controllers\VideoController;
 use App\Http\Controllers\IndexController;
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
+Route::get('/{page}', [IndexController::class, 'index'])
+    ->whereNumber('page');
 Route::get('/video/{id}/{slug}', [VideoController::class, 'show'])
     ->whereNumber('id')
     ->name('video.show');
