@@ -115,7 +115,9 @@ class VideoPublisherController extends Controller
 
             \Log::info('Data being passed to Video::create():', [
                 'create_data' => $createData,
-                'main_dir_in_create_data' => $createData['main_dir'] ?? 'NOT SET'
+                'main_dir_in_create_data' => $createData['main_dir'] ?? 'NOT SET',
+                'category_id_in_create_data' => $createData['category_id'] ?? 'NOT SET',
+                'category_id_is_null' => is_null($createData['category_id'] ?? null)
             ]);
 
             // Create the video record - DO NOT generate new code
