@@ -230,26 +230,6 @@ class ContentPublisherRobot:
         
         return code
 
-    def clean_title(self, title: str) -> str:
-        """Clean video title by removing unwanted parts"""
-        if not title:
-            return ""
-        
-        # Remove "- ThisVid.com" and similar patterns
-        patterns_to_remove = [
-            r'\s*-\s*ThisVid\.com\s*$',
-            r'\s*-\s*thisvid\.com\s*$', 
-            r'\s*\|\s*ThisVid\.com\s*$',
-            r'\s*\|\s*thisvid\.com\s*$'
-        ]
-        
-        cleaned_title = title.strip()
-        
-        for pattern in patterns_to_remove:
-            cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
-        
-        return cleaned_title.strip()
-
     def download_file_from_s3(self, s3_key: str, local_path: str) -> bool:
         """Download file from S3 to local path"""
         try:
@@ -360,6 +340,39 @@ class ContentPublisherRobot:
         except Exception as e:
             logger.warning(f"⚠️ Failed to cleanup local file {file_path}: {e}")
 
+    def clean_description(self, description: str) -> str:
+        """Clean video description by truncating at '. Watch'"""
+        if not description:
+            return ""
+        
+        # Look for ". Watch" pattern (case insensitive)
+        match = re.search(r'\.\s*watch\b', description, re.IGNORECASE)
+        if match:
+            # Return everything up to and including the period
+            return description[:match.start() + 1].strip()
+        
+        return description.strip()
+
+    def clean_title(self, title: str) -> str:
+        """Clean video title by removing unwanted parts"""
+        if not title:
+            return ""
+        
+        # Remove "- ThisVid.com" and similar patterns
+        patterns_to_remove = [
+            r'\s*-\s*ThisVid\.com\s*$',
+            r'\s*-\s*thisvid\.com\s*$', 
+            r'\s*\|\s*ThisVid\.com\s*$',
+            r'\s*\|\s*thisvid\.com\s*$'
+        ]
+        
+        cleaned_title = title.strip()
+        
+        for pattern in patterns_to_remove:
+            cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
+        
+        return cleaned_title.strip()
+
     def parse_tags(self, tags_string: str) -> List[str]:
         """Parse tags string into list"""
         if not tags_string:
@@ -390,6 +403,10 @@ class ContentPublisherRobot:
             raw_title = video_data.get('title', '').strip()
             clean_title = self.clean_title(raw_title) or f'Video {video_code}'
             
+            # Clean and prepare description
+            raw_description = video_data.get('description', '').strip()
+            clean_description = self.clean_description(raw_description)
+            
             # Prepare tags
             tags = self.parse_tags(video_data.get('tags', ''))
             
@@ -406,7 +423,7 @@ class ContentPublisherRobot:
             api_payload = {
                 'code': video_code,  # IMPORTANT: Include the video code
                 'title': clean_title,
-                'description': video_data.get('description', ''),
+                'description': clean_description,
                 'published_at': datetime.now(timezone.utc).isoformat(),
                 'access_type': 'public',
                 'user_id': user_id,
