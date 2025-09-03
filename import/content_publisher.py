@@ -296,48 +296,54 @@ class ContentPublisherRobot:
             return False
 
     def process_video_files(self, video_data: Dict[str, Any], video_code: str) -> Dict[str, str]:
-        """Process video files (download from sources, upload to temp)"""
+        """Download video files from S3 sources and upload to temp directory with proper naming"""
+        file_paths = {}
+        video_id = video_data['video_id']  # Use video_id from database
+        
         try:
-            file_paths = {}
-            
-            # Define source and destination paths
-            source_video_key = video_data.get('s3_video_key')
-            source_thumb_key = video_data.get('s3_thumbnail_key')
-            
-            # Generate local paths
+            # Process video file - use video_id.mp4 from S3 sources
+            source_video_key = f"{self.s3_source_dir}/{video_id}.mp4"
             video_filename = f"{video_code}.mp4"
-            thumb_filename = f"{video_code}.jpg"
+            temp_video_key = f"{self.s3_temp_dir}/{video_filename}"
             local_video_path = os.path.join(self.local_temp_dir, video_filename)
+            
+            logger.info(f"🎬 Processing video file: {video_id}.mp4 -> {video_filename}")
+            
+            # Download from sources directory
+            if self.download_file_from_s3(source_video_key, local_video_path):
+                # Upload to temp directory with new name
+                if self.upload_file_to_s3(local_video_path, temp_video_key):
+                    file_paths['video_file'] = video_filename
+                    logger.info(f"✅ Video file processed successfully: {video_filename}")
+                else:
+                    logger.error(f"❌ Failed to upload video file to temp: {video_filename}")
+                
+                # Clean up local file
+                self._cleanup_local_file(local_video_path)
+            else:
+                logger.error(f"❌ Failed to download video file: {source_video_key}")
+            
+            # Process thumbnail file - use video_id.jpg from S3 sources
+            source_thumb_key = f"{self.s3_source_dir}/{video_id}.jpg"
+            thumb_filename = f"{video_code}_thumb.jpg"
+            temp_thumb_key = f"{self.s3_temp_dir}/{thumb_filename}"
             local_thumb_path = os.path.join(self.local_temp_dir, thumb_filename)
             
-            # Define S3 temp paths
-            temp_video_key = f"{self.s3_temp_dir}/{video_filename}"
-            temp_thumb_key = f"{self.s3_temp_dir}/{thumb_filename}"
+            logger.info(f"🖼️ Processing thumbnail: {video_id}.jpg -> {thumb_filename}")
             
-            # Download video file
-            if source_video_key:
-                if self.download_file_from_s3(source_video_key, local_video_path):
-                    if self.upload_file_to_s3(local_video_path, temp_video_key):
-                        file_paths['video_file'] = temp_video_key
-                        self._cleanup_local_file(local_video_path)
-                    else:
-                        logger.error(f"❌ Failed to upload video to S3 temp: {temp_video_key}")
-                        return {}
+            # Download from sources directory
+            if self.download_file_from_s3(source_thumb_key, local_thumb_path):
+                # Upload to temp directory with new name
+                if self.upload_file_to_s3(local_thumb_path, temp_thumb_key):
+                    file_paths['thumbnail'] = thumb_filename
+                    logger.info(f"✅ Thumbnail processed successfully: {thumb_filename}")
                 else:
-                    logger.error(f"❌ Failed to download video: {source_video_key}")
-                    return {}
+                    logger.error(f"❌ Failed to upload thumbnail to temp: {thumb_filename}")
+                
+                # Clean up local file
+                self._cleanup_local_file(local_thumb_path)
             else:
-                logger.error("❌ No video S3 key provided")
-                return {}
-            
-            # Download thumbnail if available
-            if source_thumb_key:
-                if self.download_file_from_s3(source_thumb_key, local_thumb_path):
-                    if self.upload_file_to_s3(local_thumb_path, temp_thumb_key):
-                        file_paths['thumbnail_file'] = temp_thumb_key
-                    self._cleanup_local_file(local_thumb_path)
-                else:
-                    logger.warning(f"⚠️ Failed to download thumbnail (continuing anyway): {source_thumb_key}")
+                logger.warning(f"⚠️ Failed to download thumbnail (continuing anyway): {source_thumb_key}")
             
             return file_paths
             
@@ -377,12 +383,8 @@ class ContentPublisherRobot:
         return tags
 
     def publish_video_via_api(self, video_data: Dict[str, Any], category_data: Optional[Dict[str, Any]], 
-                             video_code: str, retries: int = 0) -> Optional[Dict[str, Any]]:
-        """Publish video via Filament API with retry on code conflict"""
-        if retries >= self.max_retries:
-            logger.error(f"❌ Max retries ({self.max_retries}) reached for video code conflicts")
-            return None
-            
+                            video_code: str) -> Optional[Dict[str, Any]]:
+        """Publish video via Filament API"""
         try:
             # Clean and prepare title
             raw_title = video_data.get('title', '').strip()
@@ -402,7 +404,7 @@ class ContentPublisherRobot:
             
             # Prepare API payload - include the video code!
             api_payload = {
-                'code': video_code,
+                'code': video_code,  # IMPORTANT: Include the video code
                 'title': clean_title,
                 'description': video_data.get('description', ''),
                 'published_at': datetime.now(timezone.utc).isoformat(),
@@ -427,7 +429,6 @@ class ContentPublisherRobot:
             logger.info(f"   User ID: {user_id}, Target ID: {target_id}")
             logger.info(f"   Category ID: {category_data['id'] if category_data else 'None'}")
             logger.info(f"   Tags: {tags}")
-            logger.info(f"📋 Full API Payload: {json.dumps(api_payload, indent=2)}")
             
             response = requests.post(
                 f"{self.api_base_url}/videos",
@@ -447,9 +448,6 @@ class ContentPublisherRobot:
                 else:
                     logger.error(f"❌ API returned success=false: {result}")
                     return None
-            elif response.status_code == 422 and 'code' in response.text.lower():
-                logger.warning(f"⚠️ Video code {video_code} already exists, retrying with new code (attempt {retries + 1})")
-                return self.publish_video_via_api(video_data, category_data, self.generate_video_code(), retries + 1)
             else:
                 logger.error(f"❌ API error: {response.status_code} - {response.text}")
                 return None
@@ -544,7 +542,7 @@ class ContentPublisherRobot:
                 return False
             
             # Publish video via API
-            published_video = self.publish_video_via_api(video_data, category_data, video_code, retries=0)
+            published_video = self.publish_video_via_api(video_data, category_data, video_code)
             if published_video:
                 # Trigger afterCreate functionality using video_code
                 after_create_success = self.trigger_after_create(video_code)

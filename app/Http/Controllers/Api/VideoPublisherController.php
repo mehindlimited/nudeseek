@@ -21,13 +21,6 @@ class VideoPublisherController extends Controller
         try {
             // Validation rules extracted from your Filament form
             $validated = $request->validate([
-                'code' => [
-                    'required',
-                    'string',
-                    'size:16',
-                    'regex:/^[a-z0-9]+$/',
-                    'unique:videos,code'
-                ],
                 'title' => 'required|string|max:255',
                 'slug' => [
                     'nullable',
@@ -61,13 +54,13 @@ class VideoPublisherController extends Controller
                 'tags.*' => 'string|min:2|max:50',
             ]);
 
-            // Force lowercase on code for consistency
-            $validated['code'] = Str::lower($validated['code']);
-
             // Generate slug if not provided
             if (empty($validated['slug'])) {
                 $validated['slug'] = Str::slug($validated['title']);
             }
+
+            // Generate unique code
+            $validated['code'] = Video::generateUniqueCode();
 
             // Set default status
             $validated['status'] = 'draft';
