@@ -19,7 +19,7 @@ class IndexController extends Controller
             ->where('status', 'active') // ✅ only active videos
             ->when($targetId, fn($q) => $q->where('target_id', $targetId))
             ->latest()
-            ->paginate(24)
+            ->paginate(60)
             ->withQueryString();
 
         return view('index', [
