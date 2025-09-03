@@ -59,13 +59,13 @@
                     </div>
                 </div>
 
-                <!-- Creator Info -->
+                {{-- Creator Info --}}
                 <div class="mt-4 border-t border-[#efefef] pt-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <img src="https://picsum.photos/40/40?random=1" alt="Creator avatar" class="w-10 h-10 rounded-full">
                             <div>
-                                <a href="/creator/sarahsmith" class="text-sm font-medium text-[#222] hover:text-[#dc251f]">SarahSmith</a>
+                                <a href="/member/{{ $video->user->username }}" class="text-sm font-medium text-[#222] hover:text-[#dc251f]">{{ $video->user->username }}</a>
                                 <p class="text-xs text-[#666]">10K subscribers</p>
                             </div>
                         </div>

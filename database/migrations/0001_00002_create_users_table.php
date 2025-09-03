@@ -31,6 +31,7 @@ return new class extends Migration
             $table->enum('relationship_status', ['single', 'in_a_relationship', 'married', 'complicated', 'open'])->nullable();
             $table->boolean('has_avatar')->default(false);
             $table->boolean('is_real')->default(true);
+            $table->time('last_online_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
