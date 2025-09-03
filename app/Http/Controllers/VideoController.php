@@ -27,6 +27,6 @@ class VideoController extends Controller
             ], 301);
         }
 
-        return view('videos.show', compact('video'));
+        return view('video.show', compact('video'));
     }
 }

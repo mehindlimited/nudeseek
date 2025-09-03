@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Page - NudeSeek</title>
+    <title>{{ $video->title }}- NudeSeek</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
 </head>
 
 <body class="font-sans bg-gray-50">
@@ -22,19 +23,18 @@
             <!-- Video Player and Info -->
             <div class="lg:w-3/4">
                 <!-- Video Player -->
-                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                    <video controls class="w-full h-full">
-                        <source src="https://example.com/sample-video.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
+                <div class="relative aspect-video rounded-lg overflow-hidden">
+                    <video id="nudeseek-player">
+                        <source src="https://videos-nudeseek.b-cdn.net/{{ $video->main_dir }}/{{ $video->code }}.mp4" type="video/mp4" />
                     </video>
                 </div>
 
                 <!-- Video Info -->
                 <div class="mt-4">
-                    <h1 class="text-2xl font-bold text-[#222] line-clamp-2">Sample Video Title</h1>
+                    <h1 class="text-2xl font-bold text-[#222] line-clamp-2">{{ $video->title }}</h1>
                     <div class="flex items-center justify-between mt-2">
                         <div class="text-sm text-[#666]">
-                            <span>845K views</span> • <span>1 week ago</span>
+                            <span>{{ number_format($video->views) }} views</span> • <span>{{ $video->created_at->diffForHumans() }}</span>
                         </div>
                         <div class="flex gap-2">
                             <button class="flex items-center gap-1 px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full hover:border-[#dc251f] hover:text-[#dc251f] transition-colors">
@@ -399,6 +399,57 @@
                 console.log('Extreme mode:', e.target.checked);
             });
         });
+    </script>
+    <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+    <script>
+        let player = fluidPlayer(
+            'nudeseek-player', {
+                "layoutControls": {
+                    "controlBar": {
+                        "autoHide": true,
+                        "playbackRates": [
+                            "x2",
+                            "x1.5",
+                            "x1",
+                            "x0.5",
+                            "x0.25"
+                        ],
+                    },
+                    "persistentSettings": {
+                        "volume": true,
+                        "quality": false,
+                        "speed": false,
+                        "theatre": false,
+                    },
+                    "contextMenu": {
+                        "controls": true,
+                        "links": [{
+                            "href": 'https://fucker.com',
+                            "label": 'Fucker'
+                        }]
+                    },
+                    "controlForwardBackward": {
+                        "show": false,
+                        "doubleTapMobile": true,
+                    },
+                    "miniPlayer": {
+                        "enabled": false,
+                    },
+                    "roundedCorners": 0,
+                    "preload": "auto",
+                    "autoPlay": false,
+                    "mute": false,
+                    "allowTheatre": false,
+                    "playPauseAnimation": false,
+                    "playbackRateEnabled": true,
+                    "autoFullScreenLandscape": true,
+                    "allowDownload": false,
+                    "autoRotateFullScreen": true,
+                    "playButtonShowing": true,
+                    "fillToContainer": true,
+                    "posterImage": "https://thumbnails-nudeseek.b-cdn.net/{{ $video->main_dir }}/{{ $video->code }}_thumb_1.jpg",
+                },
+            });
     </script>
 </body>
 

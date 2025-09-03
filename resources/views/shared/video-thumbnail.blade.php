@@ -8,7 +8,7 @@
 
         @if(!empty($video->duration))
         <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-            {{ $video->duration }}
+            {{ \Carbon\CarbonInterval::seconds($video->duration)->cascade()->format($video->duration >= 3600 ? '%H:%I:%S' : '%I:%S') }}
         </span>
         @endif
     </div>
@@ -19,8 +19,8 @@
         </h3>
 
         <div class="text-xs text-[#666] mt-1">
-            @if(!empty($video->creator?->name))
-            <div>{{ $video->creator->name }}</div>
+            @if(!empty($video->user?->username))
+            <div>{{ $video->user->username }}</div>
             @endif
 
             <div>
