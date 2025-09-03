@@ -272,13 +272,30 @@ class VideoPublisherController extends Controller
     public function triggerAfterCreate(Request $request, $videoCode)
     {
         try {
+            \Log::info('AfterCreate called with video code:', ['video_code' => $videoCode]);
+
             // Find video by code
             $video = Video::where('code', $videoCode)->first();
 
             if (!$video) {
+                \Log::error('Video not found for afterCreate:', [
+                    'video_code' => $videoCode,
+                    'searched_in' => 'videos.code column'
+                ]);
+
+                // Debug: Check if video exists with different criteria
+                $videoById = Video::latest()->first();
+                \Log::info('Latest video in database:', [
+                    'id' => $videoById->id ?? 'none',
+                    'code' => $videoById->code ?? 'none',
+                    'title' => $videoById->title ?? 'none'
+                ]);
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'Video not found'
+                    'message' => 'Video not found',
+                    'video_code' => $videoCode,
+                    'debug' => 'Check logs for video lookup details'
                 ], 404);
             }
 

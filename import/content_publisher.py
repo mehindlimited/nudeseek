@@ -429,6 +429,7 @@ class ContentPublisherRobot:
             logger.info(f"   User ID: {user_id}, Target ID: {target_id}")
             logger.info(f"   Category ID: {category_data['id'] if category_data else 'None'}")
             logger.info(f"   Tags: {tags}")
+            logger.info(f"📋 Full API Payload: {json.dumps(api_payload, indent=2)}")
             
             response = requests.post(
                 f"{self.api_base_url}/videos",
