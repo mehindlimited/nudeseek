@@ -16,7 +16,7 @@ class Video extends Model
         'duration',
         'published_at',
         'status',
-        'visibility',
+        'access_type',
         'views',
         'likes',
         'user_id',
