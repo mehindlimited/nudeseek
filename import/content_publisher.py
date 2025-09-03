@@ -363,6 +363,10 @@ class ContentPublisherRobot:
                             video_code: str) -> Optional[Dict[str, Any]]:
         """Publish video via Filament API"""
         try:
+            # Clean and prepare title
+            raw_title = video_data.get('title', '').strip()
+            clean_title = self.clean_title(raw_title) or f'Video {video_code}'
+            
             # Prepare tags
             tags = self.parse_tags(video_data.get('tags', ''))
             
@@ -375,9 +379,10 @@ class ContentPublisherRobot:
                 logger.error(f"❌ Could not find suitable user for target_id {target_id}")
                 return None
             
-            # Prepare API payload
+            # Prepare API payload - include the video code!
             api_payload = {
-                'title': video_data.get('title', '').strip() or f'Video {video_code}',
+                'code': video_code,  # IMPORTANT: Include the video code
+                'title': clean_title,
                 'description': video_data.get('description', ''),
                 'published_at': datetime.now(timezone.utc).isoformat(),
                 'access_type': 'public',
@@ -387,7 +392,7 @@ class ContentPublisherRobot:
                 'tags': tags
             }
             
-            # Remove None values
+            # Remove None values but keep empty arrays/strings
             api_payload = {k: v for k, v in api_payload.items() if v is not None}
             
             headers = {
@@ -395,7 +400,12 @@ class ContentPublisherRobot:
                 'Accept': 'application/json'
             }
             
-            logger.info(f"📤 Publishing video via API: '{api_payload['title']}' (code: {video_code})")
+            logger.info(f"📤 Publishing video via API:")
+            logger.info(f"   Title: '{clean_title}' (cleaned from: '{raw_title}')")
+            logger.info(f"   Code: {video_code}")
+            logger.info(f"   User ID: {user_id}, Target ID: {target_id}")
+            logger.info(f"   Category ID: {category_data['id'] if category_data else 'None'}")
+            logger.info(f"   Tags: {tags}")
             
             response = requests.post(
                 f"{self.api_base_url}/videos",
@@ -406,9 +416,11 @@ class ContentPublisherRobot:
             
             if response.status_code in [200, 201]:
                 result = response.json()
+                logger.info(f"📄 Full API Response: {result}")
+                
                 if result.get('success'):
                     video_data_response = result.get('data', result)
-                    logger.info(f"✅ Video published successfully: {video_data_response.get('id', 'Unknown ID')}")
+                    logger.info(f"✅ Video published successfully: ID {video_data_response.get('id', 'Unknown')}")
                     return video_data_response
                 else:
                     logger.error(f"❌ API returned success=false: {result}")
