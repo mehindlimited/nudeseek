@@ -591,6 +591,69 @@ class ContentPublisherRobot:
             if connection:
                 connection.close()
 
+    def run_batch(self, batch_size: int) -> int:
+        """Run batch processing mode - process up to batch_size videos"""
+        logger.info(f"🔄 Starting batch mode - processing up to {batch_size} videos")
+        
+        processed_count = 0
+        failed_count = 0
+        
+        for i in range(batch_size):
+            logger.info(f"📊 Processing video {i + 1} of {batch_size}")
+            
+            try:
+                success = self.process_single_video()
+                
+                if success:
+                    processed_count += 1
+                    logger.info(f"✅ Video {i + 1} processed successfully ({processed_count}/{batch_size})")
+                else:
+                    failed_count += 1
+                    logger.warning(f"❌ Video {i + 1} failed to process ({failed_count} failures so far)")
+                    
+                    # If no videos available, break early
+                    if failed_count >= 3:
+                        logger.info("🛑 Multiple consecutive failures, likely no more videos to process")
+                        break
+                
+                # Small delay between videos to avoid overwhelming the API
+                if i < batch_size - 1:  # Don't sleep after the last video
+                    time.sleep(2)
+                    
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"❌ Error processing video {i + 1}: {e}")
+        
+        logger.info(f"🏁 Batch processing complete: {processed_count} successful, {failed_count} failed")
+        return processed_count
+
+    def run_continuous(self, delay: int = 60) -> None:
+        """Run in continuous mode - keep processing videos with delay between batches"""
+        logger.info(f"🔄 Starting continuous mode with {delay}s delay between videos")
+        
+        total_processed = 0
+        
+        try:
+            while True:
+                logger.info(f"🔄 Checking for videos to process... (Total processed: {total_processed})")
+                
+                success = self.process_single_video()
+                
+                if success:
+                    total_processed += 1
+                    logger.info(f"✅ Video processed successfully (Total: {total_processed})")
+                else:
+                    logger.info("📭 No videos to process or processing failed")
+                
+                logger.info(f"⏱️ Sleeping for {delay} seconds...")
+                time.sleep(delay)
+                
+        except KeyboardInterrupt:
+            logger.info(f"🛑 Continuous mode stopped by user. Total processed: {total_processed}")
+        except Exception as e:
+            logger.error(f"❌ Fatal error in continuous mode: {e}")
+            raise
+
     def get_status(self) -> Dict[str, Any]:
         """Get current status of the robot and pending videos"""
         try:
