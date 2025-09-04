@@ -16,14 +16,13 @@ Route::get('/categories', [CategoryController::class, 'index'])->name('categorie
 
 Route::get('/test', [TestController::class, 'index'])->name('test.index');
 
-// canonical: /{page}/
+// Redirect /2 -> /2/
+Route::get(
+    '/{page}',
+    fn(int $page) => redirect("/{$page}/", 301)
+)->whereNumber('page');
+
+// Canonical: /{page}/
 Route::get('/{page}/', [IndexController::class, 'index'])
     ->whereNumber('page')
     ->name('index.page');
-
-// redirect /2 -> /2/
-Route::get(
-    '/{page}',
-    fn(int $page) =>
-    redirect("/{$page}/", 301)
-)->whereNumber('page');
