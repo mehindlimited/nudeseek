@@ -78,11 +78,22 @@
                 <!-- Video Description -->
                 <div class="mt-4">
                     <p class="text-sm text-[#666] leading-relaxed">
-                        This is a sample video description. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        {{ $video->description }}
                     </p>
+                    @php
+                    use Illuminate\Support\Str;
+                    @endphp
+
                     <div class="mt-2 flex flex-wrap gap-2">
-                        <a href="/categories/sample" class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full hover:border-[#dc251f] hover:text-[#dc251f] transition-colors">Sample Tag</a>
-                        <a href="/categories/example" class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full hover:border-[#dc251f] hover:text-[#dc251f] transition-colors">Example</a>
+                        @forelse ($video->tags as $tag)
+                        <a
+                            href="{{ url('/t/' . ($tag->slug ?? Str::slug($tag->name))) }}"
+                            class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full hover:border-[#dc251f] hover:text-[#dc251f] transition-colors">
+                            {{ $tag->name }}
+                        </a>
+                        @empty
+                        <span class="text-sm text-neutral-500">No tags</span>
+                        @endforelse
                     </div>
                 </div>
 
