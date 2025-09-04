@@ -75,24 +75,6 @@
      </div>
      <!-- User Preferences Block -->
      <div class="flex items-center space-x-4">
-         <!-- I am section -->
-         <div class="flex items-center gap-2">
-             <span class="text-sm text-[#666]">I am</span>
-             <div class="flex gap-2">
-                 <label class="relative">
-                     <input type="radio" name="gender" value="male" class="peer sr-only">
-                     <div class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full cursor-pointer transition-all peer-checked:border-[#dc251f] peer-checked:bg-[#dc251f] peer-checked:text-white hover:border-[#dc251f]/50">
-                         Male
-                     </div>
-                 </label>
-                 <label class="relative">
-                     <input type="radio" name="gender" value="female" class="peer sr-only">
-                     <div class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full cursor-pointer transition-all peer-checked:border-[#dc251f] peer-checked:bg-[#dc251f] peer-checked:text-white hover:border-[#dc251f]/50">
-                         Female
-                     </div>
-                 </label>
-             </div>
-         </div>
          <!-- Separator -->
          <div class="h-8 w-[1px] bg-[#dfdfdf]"></div>
          <!-- I like section -->
