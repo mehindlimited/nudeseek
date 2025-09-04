@@ -80,6 +80,7 @@
                     <p class="text-sm text-[#666] leading-relaxed">
                         {{ $video->description }}
                     </p>
+
                     @php
                     use Illuminate\Support\Str;
                     @endphp
@@ -89,10 +90,10 @@
                         <a
                             href="{{ url('/t/' . ($tag->slug ?? Str::slug($tag->name))) }}"
                             class="px-3 py-1 text-sm border-2 border-[#dfdfdf] bg-[#ffffff] rounded-full hover:border-[#dc251f] hover:text-[#dc251f] transition-colors">
-                            {{ $tag->name }}
+                            {{ Str::lower($tag->name) }}
                         </a>
                         @empty
-                        <span class="text-sm text-neutral-500">No tags</span>
+                        <span class="text-sm text-neutral-500">no tags</span>
                         @endforelse
                     </div>
                 </div>
