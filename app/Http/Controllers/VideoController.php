@@ -27,6 +27,8 @@ class VideoController extends Controller
             ], 301);
         }
 
+        $video->increment('views');
+
         return view('video.show', compact('video'));
     }
 }
