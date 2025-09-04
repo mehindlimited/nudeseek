@@ -25,5 +25,5 @@ Route::get('/{page}/', [IndexController::class, 'index'])
 Route::get(
     '/{page}',
     fn(int $page) =>
-    redirect()->route('index.page', ['page' => $page], 301)
+    redirect("/{$page}/", 301)
 )->whereNumber('page');
