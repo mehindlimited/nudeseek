@@ -18,9 +18,10 @@ class VideoController extends Controller
             ]);
         }
 
-        // Load the video (eager-load relations you actually use)
+        // Load the video (only active)
         $video = Video::query()
-            ->with(['tags:id,name,slug']) // add/remove relations as needed
+            ->with(['tags:id,name,slug']) // eager load tags
+            ->where('status', 'active')
             ->findOrFail($id);
 
         // Canonical slug redirect
@@ -34,10 +35,10 @@ class VideoController extends Controller
         // Count a view
         $video->increment('views');
 
-        // Helper to fetch related videos by same target_id with backfill
+        // Helper to fetch related active videos by same target_id with backfill
         $fetchRelated = function (int $limit) use ($video) {
-            // If your column is actually misspelled (e.g., `taget_id`), change `target_id` below.
             $primary = Video::query()
+                ->where('status', 'active')
                 ->where('target_id', $video->target_id)
                 ->whereKeyNot($video->getKey())
                 ->inRandomOrder()
@@ -48,10 +49,10 @@ class VideoController extends Controller
                 return $primary;
             }
 
-            // Backfill with randoms (excluding already picked + current)
             $needed = $limit - $primary->count();
 
             $backfill = Video::query()
+                ->where('status', 'active')
                 ->whereKeyNot($video->getKey())
                 ->whereNotIn('id', $primary->pluck('id'))
                 ->inRandomOrder()
