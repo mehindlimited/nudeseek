@@ -28,6 +28,8 @@ class CategoryForm
                     ->label('Target')
                     ->options(fn() => Target::pluck('name', 'id')->toArray())
                     ->required(),
+                TextInput::make('legacy')
+                    ->required(),
                 Toggle::make('is_extreme')
                     ->label('Is Extreme')
                     ->inline(false) // shows label on the left
