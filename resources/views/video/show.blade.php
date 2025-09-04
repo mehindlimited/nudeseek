@@ -168,57 +168,9 @@
                     <div class="mt-6">
                         <h2 class="text-lg font-semibold text-[#222] mb-4">Related Videos</h2>
                         <div class="space-y-4">
-                            <div class="group cursor-pointer">
-                                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                                    <img src="https://picsum.photos/320/180?random=4" alt="Related video thumbnail" class="w-full h-full object-cover">
-                                    <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                                        12:45
-                                    </span>
-                                </div>
-                                <div class="mt-2">
-                                    <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                                        Related Video Title 1
-                                    </h3>
-                                    <div class="text-xs text-[#666] mt-1">
-                                        <div>CreatorName</div>
-                                        <div>500K views • 2 days ago</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="group cursor-pointer">
-                                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                                    <img src="https://picsum.photos/320/180?random=5" alt="Related video thumbnail" class="w-full h-full object-cover">
-                                    <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                                        8:30
-                                    </span>
-                                </div>
-                                <div class="mt-2">
-                                    <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                                        Related Video Title 2
-                                    </h3>
-                                    <div class="text-xs text-[#666] mt-1">
-                                        <div>AnotherCreator</div>
-                                        <div>300K views • 3 days ago</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="group cursor-pointer">
-                                <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                                    <img src="https://picsum.photos/320/180?random=6" alt="Related video thumbnail" class="w-full h-full object-cover">
-                                    <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                                        15:20
-                                    </span>
-                                </div>
-                                <div class="mt-2">
-                                    <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                                        Related Video Title 3
-                                    </h3>
-                                    <div class="text-xs text-[#666] mt-1">
-                                        <div>ThirdCreator</div>
-                                        <div>200K views • 5 days ago</div>
-                                    </div>
-                                </div>
-                            </div>
+                            @foreach ($randomVideosSide as $video)
+                            @include('shared.video-thumbnail', ['video' => $video])
+                            @endforeach
                         </div>
                     </div>
                 </div>
@@ -227,91 +179,9 @@
         <div class="mt-6">
             <h2 class="text-lg font-semibold text-[#222] mb-4">Related Videos</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-2 gap-y-6">
-                <div class="group cursor-pointer">
-                    <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                        <img src="https://picsum.photos/320/180?random=4" alt="Related video thumbnail" class="w-full h-full object-cover">
-                        <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                            12:45
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                            Related Video Title 1
-                        </h3>
-                        <div class="text-xs text-[#666] mt-1">
-                            <div>CreatorName</div>
-                            <div>500K views • 2 days ago</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="group cursor-pointer">
-                    <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                        <img src="https://picsum.photos/320/180?random=5" alt="Related video thumbnail" class="w-full h-full object-cover">
-                        <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                            8:30
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                            Related Video Title 2
-                        </h3>
-                        <div class="text-xs text-[#666] mt-1">
-                            <div>AnotherCreator</div>
-                            <div>300K views • 3 days ago</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="group cursor-pointer">
-                    <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                        <img src="https://picsum.photos/320/180?random=6" alt="Related video thumbnail" class="w-full h-full object-cover">
-                        <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                            15:20
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                            Related Video Title 3
-                        </h3>
-                        <div class="text-xs text-[#666] mt-1">
-                            <div>ThirdCreator</div>
-                            <div>200K views • 5 days ago</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="group cursor-pointer">
-                    <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                        <img src="https://picsum.photos/320/180?random=6" alt="Related video thumbnail" class="w-full h-full object-cover">
-                        <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                            15:20
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                            Related Video Title 3
-                        </h3>
-                        <div class="text-xs text-[#666] mt-1">
-                            <div>ThirdCreator</div>
-                            <div>200K views • 5 days ago</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="group cursor-pointer">
-                    <div class="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-                        <img src="https://picsum.photos/320/180?random=6" alt="Related video thumbnail" class="w-full h-full object-cover">
-                        <span class="absolute bottom-2 right-2 bg-black/90 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                            15:20
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <h3 class="font-medium text-[#222] text-sm line-clamp-2 leading-tight group-hover:text-[#dc251f] transition-colors">
-                            Related Video Title 3
-                        </h3>
-                        <div class="text-xs text-[#666] mt-1">
-                            <div>ThirdCreator</div>
-                            <div>200K views • 5 days ago</div>
-                        </div>
-                    </div>
-                </div>
+                @foreach ($randomVideosBottom as $video)
+                @include('shared.video-thumbnail', ['video' => $video])
+                @endforeach
             </div>
         </div>
     </main>
